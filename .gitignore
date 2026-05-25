@@ -35,3 +35,6 @@ next-env.d.ts
 logs/
 *.log
 .pm2/
+
+# Vercel
+.vercel

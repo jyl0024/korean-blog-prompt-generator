@@ -3,7 +3,7 @@ module.exports = {
     {
       name: "webapp",
       script: "npm",
-      args: "run dev",
+      args: "run dev:sandbox",
       cwd: "/home/user/webapp",
       env: {
         NODE_ENV: "development",

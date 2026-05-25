@@ -9,9 +9,12 @@ import type { Citation, GenerateRequestBody, StreamEvent } from "@/lib/types";
  * Next.js Route Segment Config
  * - Node 런타임 (Edge 가 아닌 이유: SDK + 긴 스트리밍 호환성)
  * - 동적 처리, 캐시 안 함
+ * - maxDuration: Vercel Hobby 플랜 최대 60초 / Pro 300초.
+ *   웹 검색 카테고리는 생성에 시간이 걸릴 수 있으므로 최대치로 설정.
  */
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const MODEL = "claude-sonnet-4-6";
 const MAX_TOKENS = 4096;
