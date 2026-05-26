@@ -13,27 +13,31 @@ export type CategoryId =
 /** 폼에서 받는 입력값 (자유 형태 객체) */
 export type GenerateInputs = Record<string, unknown>;
 
-/** API 요청 body */
-export interface GenerateRequestBody {
-  category: CategoryId;
-  inputs: GenerateInputs;
-}
-
-/** 웹 검색 citation */
-export interface Citation {
-  url: string;
-  title?: string;
-  /** 인용된 페이지 내 인용 영역(있을 경우) */
-  cited_text?: string;
+/** 프롬프트 빌더 결과 */
+export interface BuiltPrompt {
+  system: string;
+  user: string;
 }
 
 /**
- * /api/generate 가 NDJSON 으로 흘려보내는 이벤트들.
- * 각 줄은 하나의 JSON 객체.
+ * 사용 내역 항목 (localStorage 저장 단위).
+ *
+ * 사용자가 폼을 채워 "프롬프트 생성"을 누른 시점에 1차로 저장되고,
+ * AI 응답을 붙여넣어 "내역에 저장"을 누른 시점에 `result` 가 채워집니다.
  */
-export type StreamEvent =
-  | { type: "text"; delta: string }
-  | { type: "tool_use"; name: string; status: "start" | "end" }
-  | { type: "citation"; citation: Citation }
-  | { type: "done" }
-  | { type: "error"; message: string };
+export interface HistoryEntry {
+  /** 고유 id (timestamp + random) */
+  id: string;
+  /** 카테고리 id */
+  category: CategoryId;
+  /** 사용자 정의 제목 (없으면 자동 추출) */
+  title: string;
+  /** 생성/저장 시각 (ISO) */
+  createdAt: string;
+  /** 폼 입력값 원본 */
+  inputs: GenerateInputs;
+  /** 생성된 프롬프트 (system + user) */
+  prompt: BuiltPrompt;
+  /** AI 가 응답한 본문 (마크다운) — 비어있을 수 있음 */
+  result?: string;
+}

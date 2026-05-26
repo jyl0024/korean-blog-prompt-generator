@@ -1,253 +1,225 @@
-# 블로그 글 자동 생성기
+# 한국어 블로그 글 프롬프트 생성기
 
-영화·드라마·게임 6개 카테고리의 한국어 블로그 글을 Anthropic Claude로 자동 생성하는 사이트입니다.
+영화/드라마/게임 리뷰 및 "이달의 정보" 6개 카테고리에 대해, **외부 AI 사이트(ChatGPT/Claude/Gemini 등)에 그대로 보낼 수 있는 잘 짜여진 프롬프트**를 만들어주는 도구입니다.
 
-- **Framework**: Next.js 14 (App Router) + TypeScript
-- **UI**: Tailwind CSS + shadcn/ui
-- **AI**: Anthropic Claude (`claude-sonnet-4-6`) + `web_search_20260209` tool
-- **배포**: Vercel (서울 리전 `icn1`)
+API 키 없이 동작합니다.
 
 ---
 
-## 카테고리
+## 동작 방식 (중요)
 
-| ID | 라벨 | 웹 검색 | 주요 입력 |
-|---|---|---|---|
-| `movie-review` | 영화 리뷰 | ❌ | 제목, 감독, 주연, 한줄평, 좋았던/아쉬웠던 점, 별점, 스포일러, 추천 대상 |
-| `drama-review` | 드라마 리뷰 | ❌ | 제목, 플랫폼(6종), 시즌/회차, 한줄평, 좋았던/아쉬웠던 점, 별점, 스포일러 |
-| `game-review` | 게임 리뷰 | ❌ | 제목, 플랫폼(7종), 장르, 플레이 시간, 한줄평, 좋았던/아쉬웠던 점, 별점, 추천 대상, 가성비 |
-| `monthly-movies` | 이달의 영화 정보 | ✅ | 대상 월, 지역(한국/해외), 추가 키워드, 특히 다룰 작품 |
-| `monthly-dramas` | 이달의 드라마 정보 | ✅ | 대상 월, 관심 플랫폼(다중), 추가 키워드, 특히 다룰 작품 |
-| `monthly-games` | 이달의 게임 정보 | ✅ | 대상 월, 관심 플랫폼(다중), 다룰 내용(신작/할인/업데이트/인디), 추가 키워드 |
+이 사이트는 **AI 를 직접 호출하지 않습니다.** 대신 다음 3단계 흐름을 제공합니다:
 
-## URL/엔드포인트
+1. **정보 입력** — 영화 제목·별점·감상 등 카테고리별 폼 작성
+2. **프롬프트 자동 생성** — "프롬프트 생성하기" 클릭 → 화면에 완성된 프롬프트 표시
+3. **외부 AI 에 붙여넣기** — 한 번 클릭으로 ChatGPT/Claude/Gemini/Perplexity 열기 (클립보드 자동 복사)
+4. **응답 받아 저장** — AI 가 써준 글을 사이트에 붙여넣고 "내역에 저장" → 사용 내역에서 다시 확인 가능
 
-| 경로 | 메서드 | 설명 |
-|---|---|---|
-| `/` | GET | 메인 페이지 (카테고리 카드) |
-| `/generate/[category]` | GET | 카테고리별 폼 + 결과 페이지 (6개 정적 경로 prerender) |
-| `/api/generate` | POST | 스트리밍 생성 API. body: `{ category, inputs }` |
-
-`/api/generate` 응답은 NDJSON (한 줄당 하나의 JSON):
-```
-{"type":"text","delta":"..."}
-{"type":"tool_use","name":"web_search","status":"start"}
-{"type":"tool_use","name":"web_search","status":"end"}
-{"type":"citation","citation":{"url":"...","title":"..."}}
-{"type":"done"}
-{"type":"error","message":"..."}
-```
+이렇게 하면:
+- ✅ API 키 / 결제 없이 무료 사용 (각 AI 사이트의 무료 플랜으로 충분)
+- ✅ 원하는 AI 모델 자유 선택
+- ✅ 프롬프트 / 입력값 / 결과가 브라우저에 저장되어 언제든 다시 조회
 
 ---
 
-## 로컬 실행
+## 6개 카테고리
+
+### 리뷰 작성 (이미 본/플레이한 작품)
+- 영화 리뷰
+- 드라마 리뷰
+- 게임 리뷰
+
+### 이달의 정보 (최신 정보 큐레이션 → 검색 가능한 AI 추천)
+- 이달의 영화 정보
+- 이달의 드라마 정보
+- 이달의 게임 정보
+
+> "이달의 *" 카테고리는 ChatGPT(Search 모드) 또는 Perplexity 같은 **웹 검색 가능한 AI** 에 보내야 정보가 정확합니다.
+
+---
+
+## 사용 내역 기능 (`/history`)
+
+- 모든 생성 기록이 **브라우저 localStorage** 에 저장됨
+- 항목별로 보관되는 것:
+  - 카테고리 / 생성 일시 / 사용자 제목
+  - 폼에 입력한 값 원본 (JSON)
+  - 생성된 프롬프트 (system + user)
+  - AI 가 답변한 글 본문 (저장 시)
+- 기능:
+  - **검색** — 제목 / 입력값 / 결과 본문 부분일치
+  - **카테고리 필터**
+  - **상세 모달** — 결과 미리보기/편집/MD·TXT 복사, 프롬프트 복사, 입력값 JSON 보기
+  - **제목 편집**, **개별 삭제**, **전체 삭제**
+
+> ⚠️ localStorage 기반이므로 **브라우저 시크릿모드 / 다른 브라우저 / 다른 기기 / 캐시 삭제** 시 내역이 보존되지 않습니다.
+
+---
+
+## 기술 스택
+
+- **Next.js 14** (App Router) + TypeScript
+- **Tailwind CSS** + **shadcn/ui** (Radix UI)
+- **react-markdown** + **remark-gfm** (마크다운 렌더링)
+- **lucide-react** (아이콘)
+- **localStorage** (사용 내역)
+
+> 서버 API / 데이터베이스 / 외부 SDK 없음. 100% 정적 사이트로 배포 가능.
+
+---
+
+## 로컬 개발
 
 ```bash
 # 의존성 설치
 npm install
 
-# 환경변수 설정
-cp .env.local.example .env.local
-# .env.local 의 ANTHROPIC_API_KEY 값을 실제 키로 채우기
-
-# 개발 서버
+# 개발 서버 (Vercel 표준)
 npm run dev
 # → http://localhost:3000
-```
 
-샌드박스(0.0.0.0 바인딩 필요한 환경)에서는 PM2로:
-```bash
-pm2 start ecosystem.config.cjs
-# (내부적으로 npm run dev:sandbox 실행)
+# 샌드박스 환경 (0.0.0.0 바인딩)
+npm run dev:sandbox
+
+# 빌드 + 시작
+npm run build
+npm run start
 ```
 
 ---
 
-## 🚀 Vercel 배포 가이드
+## Vercel 배포
 
-### Step 1. GitHub 리포지토리 준비
+### 방법 1) Vercel CLI 직접 배포 (GitHub 불필요, 가장 간단)
 
 ```bash
-# 현재 디렉토리에서
+# 1. Vercel CLI 설치
+npm i -g vercel
+
+# 2. 로그인 (브라우저로 GitHub/Google/이메일 인증)
+vercel login
+
+# 3. 배포
 cd /path/to/webapp
-
-# 깃 상태 확인 (이미 git init 되어있음)
-git status
-
-# GitHub에 새 리포 만들기 (예: my-blog-generator)
-# https://github.com/new 에서 생성 (Private 권장)
-
-# 리모트 추가 + 푸시
-git remote add origin https://github.com/<YOUR_USERNAME>/<REPO_NAME>.git
-git branch -M main
-git push -u origin main
+vercel --prod
 ```
 
-> **확인**: `.env.local` 은 `.gitignore` 에 잡혀있어 푸시되지 않습니다. 푸시 전 `git status` 로 한 번 더 확인하세요.
+- 첫 배포 시 프로젝트 이름 / 디렉터리 / 설정을 묻습니다 → 기본값 그대로 Enter
+- 완료되면 `https://<프로젝트명>-<해시>.vercel.app` URL 발급
+- **환경 변수 설정 불필요** (이 앱은 API 키를 사용하지 않음)
 
----
+이후 코드를 수정한 뒤 다시 `vercel --prod` 한 번이면 재배포됩니다.
 
-### Step 2. Vercel 프로젝트 생성
+### 방법 2) GitHub + Vercel 자동 배포
 
-1. https://vercel.com/new 접속 (계정 없으면 GitHub로 가입)
-2. **Import Git Repository** 섹션에서 방금 푸시한 리포 선택 → **Import** 클릭
-   - GitHub 권한이 안 보이면 "Adjust GitHub App Permissions" 로 권한 부여
-3. **Configure Project** 화면:
-   - **Framework Preset**: `Next.js` 가 자동 감지됨 (그대로 두기)
-   - **Root Directory**: `./` (기본값)
-   - **Build Command**: `next build` (기본값, 그대로)
-   - **Output Directory**: 비워두기 (Next.js 자동)
-   - **Install Command**: `npm install` (기본값)
+장기 운영하면서 자동 배포를 원할 경우:
 
----
+1. GitHub 에 빈 저장소 만들기
+2. 로컬에서:
+   ```bash
+   git remote add origin https://github.com/<USER>/<REPO>.git
+   git push -u origin main
+   ```
+3. https://vercel.com/new → GitHub 저장소 선택 → **Deploy**
+4. 이후 `git push` 만 하면 자동 배포 (main → 프로덕션, PR → 프리뷰)
 
-### Step 3. 환경변수 등록 (배포 전에)
-
-배포 버튼 누르기 **전에** 같은 화면 하단의 **Environment Variables** 섹션에서:
-
-| Name | Value | Environments |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | `sk-ant-api03-…` (실제 키) | **Production** / **Preview** / **Development** 모두 체크 |
-
-- "Add" 클릭해서 추가
-- 키는 한 번 저장하면 다시 볼 수 없습니다 (별도 메모 권장)
-
----
-
-### Step 4. 배포
-
-1. **Deploy** 버튼 클릭
-2. 2~3분 후 빌드 완료 → 자동으로 도메인 발급
-   - 예: `https://<프로젝트명>.vercel.app`
-3. 사이트 접속해서 동작 확인:
-   - `/` 메인 카드 6개 표시되는지
-   - `/generate/movie-review` 에서 폼 입력 → 생성 버튼 → 실제 글이 스트리밍되는지
-   - `/generate/monthly-games` 에서 "정보 검색 중..." 표시 + 참고 자료 섹션 채워지는지
-
----
-
-### Step 5. (선택) 환경변수 나중에 변경하기
-
-배포 후 키를 추가/변경하려면:
-1. https://vercel.com/dashboard → 프로젝트 선택
-2. 상단 탭 **Settings** → 왼쪽 메뉴 **Environment Variables**
-3. 값 추가/수정/삭제 후 저장
-4. **중요**: 환경변수 변경은 **재배포 후에 반영**됩니다.
-   - 상단 탭 **Deployments** → 최신 배포 옆 `…` → **Redeploy** 클릭
-
----
-
-### Step 6. (선택) 커스텀 도메인 연결
-
-1. **Settings** → **Domains**
-2. 보유 도메인 입력 → Vercel이 제시하는 DNS 레코드(A 레코드 또는 CNAME)를 도메인 등록처에 추가
-3. 자동으로 HTTPS 인증서 발급
-
----
-
-## 🔄 이후 코드 변경 → 자동 배포
-
-- `main` 브랜치에 `git push` → **Production 배포 자동**
-- 다른 브랜치 push 또는 PR → **Preview 배포 자동** (PR 코멘트에 미리보기 URL 자동 게시)
-
-```bash
-# 예시
-git add .
-git commit -m "feat: 새 카테고리 추가"
-git push origin main
-# → Vercel 대시보드에서 자동 배포 진행됨
-```
-
----
-
-## ⚠️ Vercel 무료 플랜 주의사항
-
-- **Serverless Function 실행 시간**: 최대 60초 (Hobby) / 300초 (Pro)
-  - `/api/generate` 의 `maxDuration = 60` 으로 설정해두었습니다
-  - 웹 검색 카테고리가 60초를 넘으면 응답이 잘릴 수 있음 → 그럴 경우 Pro로 업그레이드 후 `maxDuration` 을 늘리세요
-- **월간 사용량**:
-  - Hobby: 함수 호출 100GB-hours/월, 대역폭 100GB/월
-  - 개인 블로그 용도로는 충분
-- **상업적 이용**: Hobby 플랜은 비상업적 용도만 허용. 상업적이면 Pro 필요
+> 환경 변수: 이 앱은 어떠한 API 키도 사용하지 않으므로 Vercel 환경 변수 설정이 필요 없습니다.
 
 ---
 
 ## 폴더 구조
 
 ```
-app/
-  layout.tsx, globals.css           # 루트 레이아웃 + Tailwind 전역
-  page.tsx                          # 메인 (6개 카테고리 카드)
-  generate/[category]/
-    page.tsx                        # 서버 컴포넌트 (카테고리 검증, 메타데이터)
-    _components/
-      GeneratePageClient.tsx        # 좌/우 레이아웃, NDJSON 스트림 파싱, 디스패쳐
-      ResultPanel.tsx               # 결과 + 상태 + 복사/재생성
-      CopyButtons.tsx               # 마크다운/텍스트 복사
-      CitationsList.tsx             # 참고 자료 섹션
-      forms/
-        MovieReviewForm.tsx
-        DramaReviewForm.tsx
-        GameReviewForm.tsx
-        MonthlyMoviesForm.tsx
-        MonthlyDramasForm.tsx
-        MonthlyGamesForm.tsx
-        PlaceholderForm.tsx         # (미사용, 향후 새 카테고리 시 유용)
-        types.ts                    # FormProps 공통 인터페이스
-  api/generate/route.ts             # Anthropic 스트리밍 API (NDJSON)
-                                    # runtime=nodejs, maxDuration=60
-lib/
-  categories.ts                     # 6 카테고리 메타 (단일 소스)
-  types.ts                          # CategoryId, StreamEvent, Citation 등
-  utils.ts                          # cn()
-  markdown.ts                       # 마크다운 → plain text (텍스트 복사용)
-  prompts/
-    index.ts                        # 카테고리 → 빌더 매핑 (디스패처)
-    common.ts                       # 공통 작성 규칙 + 유틸
-    movieReview.ts, dramaReview.ts, gameReview.ts
-    monthlyMovies.ts, monthlyDramas.ts, monthlyGames.ts
-components/ui/                      # shadcn/ui 컴포넌트
-vercel.json                         # Vercel 배포 설정 (서울 리전)
-next.config.mjs                     # Next.js 설정
-ecosystem.config.cjs                # PM2 (샌드박스 개발용)
+webapp/
+├── app/
+│   ├── layout.tsx                    # 루트 레이아웃 (한국어)
+│   ├── page.tsx                      # 메인 — 6개 카테고리 카드
+│   ├── globals.css                   # Tailwind + shadcn 변수 + .markdown-body
+│   ├── generate/[category]/
+│   │   ├── page.tsx                  # 서버 컴포넌트 (params 검증)
+│   │   └── _components/
+│   │       ├── GeneratePageClient.tsx     # 메인 클라이언트 (3단계 흐름)
+│   │       ├── PromptPanel.tsx            # 생성된 프롬프트 + 외부 AI 링크
+│   │       ├── ResultPastePanel.tsx       # AI 응답 붙여넣기 + 미리보기 + 저장
+│   │       └── forms/                     # 카테고리별 폼 6종
+│   └── history/
+│       ├── page.tsx                  # /history (사용 내역)
+│       └── _components/
+│           ├── HistoryPageClient.tsx      # 목록 + 검색 + 필터 + 전체 삭제
+│           └── HistoryDetailDialog.tsx    # 상세 모달 (결과/프롬프트/입력값 탭)
+├── components/ui/                    # shadcn 컴포넌트 (button, input, ...)
+├── lib/
+│   ├── types.ts                      # CategoryId, HistoryEntry, BuiltPrompt
+│   ├── categories.ts                 # 6개 카테고리 메타데이터
+│   ├── prompts/                      # 카테고리별 프롬프트 빌더
+│   │   ├── common.ts
+│   │   ├── movieReview.ts
+│   │   ├── dramaReview.ts
+│   │   ├── gameReview.ts
+│   │   ├── monthlyMovies.ts
+│   │   ├── monthlyDramas.ts
+│   │   ├── monthlyGames.ts
+│   │   └── index.ts                  # PROMPT_BUILDERS 디스패처
+│   ├── history.ts                    # localStorage 래퍼 (저장/조회/검색/삭제)
+│   ├── aiLinks.ts                    # ChatGPT/Claude/Gemini 외부 링크 빌더
+│   ├── markdown.ts                   # markdownToPlainText
+│   └── utils.ts                      # cn()
+├── vercel.json                       # 배포 설정 (서울 리전)
+├── ecosystem.config.cjs              # PM2 (샌드박스 dev 용)
+└── package.json
 ```
-
----
-
-## 환경변수
-
-| 변수 | 필수 | 설명 |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | ✅ | Anthropic API 키 (서버 사이드 전용 — 클라이언트 번들에 노출 안 됨) |
-
-> 키 발급: https://console.anthropic.com/settings/keys
 
 ---
 
 ## 데이터 흐름
 
 ```
-[Client Form (카테고리별)]
-  ↓ POST /api/generate { category, inputs }
-[Route Handler (Node.js runtime on Vercel)]
-  ↓ isValidCategory(category)
-  ↓ getPromptBuilder(category)(inputs) → { system, user }
-  ↓ meta.webSearch ? tools.push(WEB_SEARCH_TOOL) : skip
-[Anthropic Claude API (streaming)]
-  ↓ RawMessageStreamEvent → NDJSON 변환
-[Client] NDJSON 라인 단위 파싱
-  → text:      markdown append
-  → tool_use:  "정보 검색 중..." 표시
-  → citation:  "참고 자료" 섹션에 누적
-  → done/error: 상태 전환
+[ 폼 입력 ]
+    │
+    ▼
+PROMPT_BUILDERS[category](inputs) ── 클라이언트에서 직접 호출
+    │   ├ system 프롬프트
+    │   └ user  프롬프트
+    │
+    ▼
+[ PromptPanel ] ── 화면에 표시 + 복사 / 외부 AI 사이트로 보내기
+    │
+    │   (사용자가 외부 AI 에서 글을 받아옴)
+    ▼
+[ ResultPastePanel ] ── 응답 붙여넣기 → "내역에 저장"
+    │
+    ▼
+localStorage ("kbg.history.v1") ── HistoryEntry[]
+    │
+    ▼
+[ /history ] ── 목록 / 검색 / 필터 / 상세 모달
 ```
 
 ---
 
-## 프롬프트 다듬기
+## URL 라우트
 
-각 프롬프트 파일에 `// TODO: 여기 다듬을 것` 주석으로 향후 보강 포인트를 표시해두었습니다.
-운영하면서 결과물에서 "AI 티" 패턴이 보이면:
+| 경로 | 설명 |
+|---|---|
+| `/` | 메인 — 6개 카테고리 카드 + 사용 내역 진입 링크 |
+| `/generate/movie-review` | 영화 리뷰 — 폼 + 프롬프트 + 응답 붙여넣기 |
+| `/generate/drama-review` | 드라마 리뷰 |
+| `/generate/game-review` | 게임 리뷰 |
+| `/generate/monthly-movies` | 이달의 영화 정보 (웹 검색 권장) |
+| `/generate/monthly-dramas` | 이달의 드라마 정보 (웹 검색 권장) |
+| `/generate/monthly-games` | 이달의 게임 정보 (웹 검색 권장) |
+| `/history` | 사용 내역 — 검색 / 필터 / 상세 / 삭제 |
 
-- 모든 카테고리에 적용: `lib/prompts/common.ts` 의 `COMMON_WRITING_RULES`
-- 특정 카테고리만 적용: `lib/prompts/<카테고리>.ts` 의 system 프롬프트
+---
+
+## 개발 노트
+
+- API 라우트 / 서버 상태 없음 → 100% 정적 사이트 (`output: 'export'` 도 가능)
+- 사용 내역은 사용자 브라우저에만 저장 → **프라이버시 친화적**, 서버 비용 0
+- 외부 AI 사이트로의 자동 전송:
+  - **ChatGPT / Perplexity** — `?q=` 파라미터로 프롬프트 자동 입력 (URL 8000자 이내일 때)
+  - **Claude / Gemini** — 공식 자동 입력 미지원 → 사이트만 열고 클립보드에 복사
+- 향후 확장 아이디어:
+  - 사용 내역 JSON export / import
+  - 카테고리별 통계 (몇 편 생성, 가장 많이 쓴 AI 등)
+  - 다중 기기 동기화가 필요해질 경우 Vercel KV 로 전환

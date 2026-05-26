@@ -30,18 +30,28 @@ export default function HomePage() {
 
   return (
     <main className="container mx-auto max-w-6xl px-4 py-12 sm:py-16">
+      {/* 우상단 사용 내역 링크 */}
+      <div className="flex justify-end mb-2">
+        <Link
+          href="/history"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+        >
+          사용 내역 →
+        </Link>
+      </div>
+
       {/* 헤더 */}
       <header className="text-center mb-12 sm:mb-16">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border bg-muted/40 text-xs font-medium text-muted-foreground mb-4">
           <PenLine className="h-3.5 w-3.5" />
-          한국어 블로그 글 자동 생성
+          한국어 블로그 글 프롬프트 생성기
         </div>
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
           무엇에 대한 글을 쓸까요?
         </h1>
         <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
           영화·드라마·게임 6개 카테고리 중 하나를 골라주세요. <br className="hidden sm:inline" />
-          간단한 정보만 입력하면 자연스러운 블로그 글로 완성해드립니다.
+          간단한 정보만 입력하면 외부 AI 에 바로 보낼 수 있는 프롬프트를 만들어드립니다.
         </p>
       </header>
 
@@ -59,11 +69,11 @@ export default function HomePage() {
       <section>
         <SectionHeading
           title="이달의 정보"
-          subtitle="실시간 웹 검색으로 최신 정보 큐레이션"
+          subtitle="ChatGPT·Perplexity 등 검색 가능한 AI 에 보내면 좋은 카테고리"
           badge={
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 text-xs font-medium">
               <Search className="h-3 w-3" />
-              웹 검색 활용
+              웹 검색 권장
             </span>
           }
         />
@@ -76,7 +86,7 @@ export default function HomePage() {
 
       {/* 푸터 */}
       <footer className="mt-20 text-center text-xs text-muted-foreground">
-        Powered by Claude · Next.js 14 · shadcn/ui
+        Next.js 14 · shadcn/ui · localStorage 기반 사용 내역
       </footer>
     </main>
   );
