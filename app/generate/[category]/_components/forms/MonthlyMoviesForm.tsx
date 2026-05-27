@@ -9,12 +9,15 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import type { FormProps } from "./types";
 import { MOVIE_REGION_OPTIONS } from "@/lib/prompts/monthlyMovies";
+import { LengthSelect, RecommendCountSelect } from "./_shared";
 
 interface MonthlyMoviesValues {
   month: string;
   region: "kr_focus" | "global";
   keywords: string;
   focus: string;
+  length: string;
+  count: string;
 }
 
 function defaultMonth(): string {
@@ -29,6 +32,8 @@ const DEFAULT_VALUES: MonthlyMoviesValues = {
   region: "kr_focus",
   keywords: "",
   focus: "",
+  length: "2000",
+  count: "5",
 };
 
 export function MonthlyMoviesForm({ onChange }: FormProps) {
@@ -97,6 +102,19 @@ export function MonthlyMoviesForm({ onChange }: FormProps) {
           placeholder={"예: 노스페라투\n승부\n파묘 IMAX 재개봉"}
         />
       </Field>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <LengthSelect
+          value={v.length}
+          onChange={(next) => update("length", next)}
+        />
+        <RecommendCountSelect
+          value={v.count}
+          onChange={(next) => update("count", next)}
+          label="추천 영화 개수"
+          help="몇 편의 영화를 소개할지 (1~10편)"
+        />
+      </div>
     </div>
   );
 }
@@ -134,5 +152,7 @@ function serialize(v: MonthlyMoviesValues): Record<string, unknown> {
     region: v.region,
     keywords: v.keywords.trim(),
     focus: v.focus.trim(),
+    length: Number(v.length),
+    count: Number(v.count),
   };
 }

@@ -1,4 +1,10 @@
-import { COMMON_WRITING_RULES, orNone } from "./common";
+import {
+  COMMON_WRITING_RULES,
+  orNone,
+  lengthInstruction,
+  parseLength,
+  parseRecommendCount,
+} from "./common";
 import type { GenerateInputs } from "../types";
 
 export interface MonthlyMoviesInputs {
@@ -6,6 +12,8 @@ export interface MonthlyMoviesInputs {
   region: "kr_focus" | "global"; // 한국 개봉작 위주 / 해외 포함
   keywords?: string;
   focus?: string; // 특히 다루고 싶은 작품
+  length?: number | string; // 글자수 (1000/2000/.../5000)
+  count?: number | string; // 추천 개수 (1~10)
 }
 
 /** 지역 옵션 */
@@ -38,12 +46,14 @@ export function buildPrompt(rawInputs: GenerateInputs): {
 } {
   const inputs = rawInputs as unknown as MonthlyMoviesInputs;
   const monthLabel = formatMonth(inputs.month);
+  const length = parseLength(inputs.length);
+  const count = parseRecommendCount(inputs.count);
 
   const system = `${COMMON_WRITING_RULES}
 
 [이번 글 유형]
 - 카테고리: ${monthLabel} 영화 큐레이션 (이달의 영화 정보 정리 블로그 글)
-- 분량: 한국어 기준 약 1,800~2,800자
+- 분량: ${lengthInstruction(length)}
 - 독자: 한국 영화 관객 (한국 개봉일/등급/상영관 정보를 중요하게 봄)
 
 [지역 정책]
@@ -68,7 +78,7 @@ export function buildPrompt(rawInputs: GenerateInputs): {
 [권장 구성]
 1) # 제목 — "${monthLabel} 극장에서 만날 영화들" 같은 한 줄
 2) 짧은 도입(1~2문단): 이번 달 극장가의 흐름, 주목할 분위기
-3) ## 주목할 신작 — 핵심 개봉작 3~6편을 각각 짧은 단락으로 소개
+3) ## 주목할 신작 — 핵심 개봉작 ${count}편을 각각 짧은 단락으로 소개
    - 각 작품: 한국제목/원제, 감독, 주요 출연, 개봉일, 한 줄 코멘트
 4) (선택) ## 이번 달 개인적으로 가장 기대되는 작품 — 한 작품 골라 짧은 코멘트
 5) (선택) ## 함께 보면 좋은 재개봉/특별상영 정보
@@ -76,7 +86,7 @@ export function buildPrompt(rawInputs: GenerateInputs): {
 
 [금지]
 - 검색하지 않은 채로 "5월 15일 개봉" 같은 단정형 사실을 적지 마세요. 반드시 web_search 로 확인 후 인용.
-- 모든 개봉작을 망라하지 마세요. 6편 이내로 큐레이션하세요.
+- 모든 개봉작을 망라하지 마세요. 정확히 ${count}편으로 큐레이션하세요.
 `;
 
   const focusLine = inputs.focus?.trim()
@@ -89,10 +99,12 @@ export function buildPrompt(rawInputs: GenerateInputs): {
 - 지역: ${
     inputs.region === "global" ? "해외 포함" : "한국 개봉작 위주"
   }
+- 추천 작품 수: ${count}편 (반드시 이 개수로 큐레이션)
 - 추가 키워드: ${orNone(inputs.keywords)}
 ${focusLine}
 
 먼저 web_search 로 위 조건에 맞는 ${monthLabel} 영화 정보를 충분히 검색한 다음, 그 결과만 사용해 한국어 블로그 글로 정리해주세요.
+주목할 신작 섹션에는 정확히 ${count}편을 다뤄주세요.
 바로 본문(# 제목)부터 시작하세요.`;
 
   return { system, user };

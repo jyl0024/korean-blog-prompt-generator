@@ -9,12 +9,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 import type { FormProps } from "./types";
 import { MONTHLY_DRAMA_PLATFORM_OPTIONS } from "@/lib/prompts/monthlyDramas";
+import { LengthSelect, RecommendCountSelect } from "./_shared";
 
 interface MonthlyDramasValues {
   month: string;
   platforms: string[];
   keywords: string;
   focus: string;
+  length: string;
+  count: string;
 }
 
 function defaultMonth(): string {
@@ -29,6 +32,8 @@ const DEFAULT_VALUES: MonthlyDramasValues = {
   platforms: ["netflix", "tving"],
   keywords: "",
   focus: "",
+  length: "2000",
+  count: "5",
 };
 
 export function MonthlyDramasForm({ onChange }: FormProps) {
@@ -110,6 +115,19 @@ export function MonthlyDramasForm({ onChange }: FormProps) {
           placeholder={"예: 폭싹 속았수다\n별들에게 물어봐\n원경"}
         />
       </Field>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <LengthSelect
+          value={v.length}
+          onChange={(next) => update("length", next)}
+        />
+        <RecommendCountSelect
+          value={v.count}
+          onChange={(next) => update("count", next)}
+          label="추천 드라마 개수"
+          help="몇 편의 드라마를 소개할지 (1~10편)"
+        />
+      </div>
     </div>
   );
 }
@@ -147,5 +165,7 @@ function serialize(v: MonthlyDramasValues): Record<string, unknown> {
     platforms: v.platforms,
     keywords: v.keywords.trim(),
     focus: v.focus.trim(),
+    length: Number(v.length),
+    count: Number(v.count),
   };
 }

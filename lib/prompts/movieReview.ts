@@ -2,7 +2,9 @@ import {
   COMMON_WRITING_RULES,
   bulletize,
   formatStars,
+  lengthInstruction,
   orNone,
+  parseLength,
 } from "./common";
 import type { GenerateInputs } from "../types";
 
@@ -16,6 +18,8 @@ export interface MovieReviewInputs {
   rating?: number | string;
   spoiler?: boolean;
   recommendFor?: string;
+  /** 글자수 옵션 (1000/2000/3000/4000/5000) */
+  length?: number | string;
 }
 
 /**
@@ -32,6 +36,7 @@ export function buildPrompt(rawInputs: GenerateInputs): {
   user: string;
 } {
   const inputs = rawInputs as unknown as MovieReviewInputs;
+  const length = parseLength(inputs.length);
 
   const spoilerLine = inputs.spoiler
     ? "스포일러를 포함해도 됩니다. 단, 글의 중간에 `> ⚠️ 스포일러 주의` 한 줄을 넣어 독자에게 미리 알려주세요."
@@ -41,7 +46,7 @@ export function buildPrompt(rawInputs: GenerateInputs): {
 
 [이번 글 유형]
 - 카테고리: 영화 리뷰 (관람 후기 블로그 글)
-- 분량: 한국어 기준 약 1,200~1,800자 내외
+- 분량: ${lengthInstruction(length)}
 - 구성 권장:
   1) # 제목 — 영화 제목을 살리되, 클릭하고 싶은 한 줄로
   2) 짧은 도입(1~2문단): 어떤 계기로 봤는지, 어떤 기대를 가졌는지

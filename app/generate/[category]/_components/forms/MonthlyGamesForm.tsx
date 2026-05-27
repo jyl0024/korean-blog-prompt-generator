@@ -11,12 +11,15 @@ import {
   GAME_PLATFORM_OPTIONS,
   GAME_TOPIC_OPTIONS,
 } from "@/lib/prompts/monthlyGames";
+import { LengthSelect, RecommendCountSelect } from "./_shared";
 
 interface MonthlyGamesValues {
   month: string;
   platforms: string[];
   topics: string[];
   keywords: string;
+  length: string;
+  count: string;
 }
 
 function defaultMonth(): string {
@@ -31,6 +34,8 @@ const DEFAULT_VALUES: MonthlyGamesValues = {
   platforms: ["steam", "switch"],
   topics: ["new_releases", "sales"],
   keywords: "",
+  length: "2000",
+  count: "5",
 };
 
 export function MonthlyGamesForm({ onChange }: FormProps) {
@@ -117,6 +122,19 @@ export function MonthlyGamesForm({ onChange }: FormProps) {
           placeholder="예: 소울라이크, JRPG, 멀티플레이"
         />
       </Field>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <LengthSelect
+          value={v.length}
+          onChange={(next) => update("length", next)}
+        />
+        <RecommendCountSelect
+          value={v.count}
+          onChange={(next) => update("count", next)}
+          label="추천 게임 개수"
+          help="몇 개의 게임을 소개할지 (1~10개)"
+        />
+      </div>
     </div>
   );
 }
@@ -184,5 +202,7 @@ function serialize(v: MonthlyGamesValues): Record<string, unknown> {
     platforms: v.platforms,
     topics: v.topics,
     keywords: v.keywords.trim(),
+    length: Number(v.length),
+    count: Number(v.count),
   };
 }

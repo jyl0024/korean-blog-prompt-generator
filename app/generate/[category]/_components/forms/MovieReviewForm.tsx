@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 
 import type { FormProps, FormHandle } from "./types";
+import { LengthSelect } from "./_shared";
 
 export interface MovieReviewValues {
   title: string;
@@ -26,6 +27,7 @@ export interface MovieReviewValues {
   rating: string; // "1"~"5"
   spoiler: boolean;
   recommendFor: string;
+  length: string; // "1000"~"5000"
 }
 
 const DEFAULT_VALUES: MovieReviewValues = {
@@ -38,6 +40,7 @@ const DEFAULT_VALUES: MovieReviewValues = {
   rating: "4",
   spoiler: false,
   recommendFor: "",
+  length: "2000",
 };
 
 export function MovieReviewForm({ onChange }: FormProps) {
@@ -139,6 +142,11 @@ export function MovieReviewForm({ onChange }: FormProps) {
           placeholder="예: SF 대서사를 좋아하는 사람, 원작 팬"
         />
       </Field>
+
+      <LengthSelect
+        value={v.length}
+        onChange={(next) => update("length", next)}
+      />
     </div>
   );
 }
@@ -181,6 +189,7 @@ function serialize(v: MovieReviewValues): Record<string, unknown> {
     rating: Number(v.rating),
     spoiler: v.spoiler,
     recommendFor: v.recommendFor.trim(),
+    length: Number(v.length),
   };
 }
 

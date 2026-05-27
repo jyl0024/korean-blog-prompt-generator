@@ -2,7 +2,9 @@ import {
   COMMON_WRITING_RULES,
   bulletize,
   formatStars,
+  lengthInstruction,
   orNone,
+  parseLength,
 } from "./common";
 import type { GenerateInputs } from "../types";
 
@@ -15,6 +17,8 @@ export interface DramaReviewInputs {
   bads?: string;
   rating?: number | string;
   spoiler?: boolean;
+  /** 글자수 옵션 */
+  length?: number | string;
 }
 
 /** 드라마 플랫폼 옵션 (UI/프롬프트 공통) */
@@ -39,6 +43,7 @@ export function buildPrompt(rawInputs: GenerateInputs): {
   user: string;
 } {
   const inputs = rawInputs as unknown as DramaReviewInputs;
+  const length = parseLength(inputs.length);
 
   const spoilerLine = inputs.spoiler
     ? "스포일러를 포함해도 됩니다. 단, 글의 중간에 `> ⚠️ 스포일러 주의` 한 줄을 넣어 독자에게 미리 알려주세요."
@@ -48,7 +53,7 @@ export function buildPrompt(rawInputs: GenerateInputs): {
 
 [이번 글 유형]
 - 카테고리: 드라마 리뷰 (시청 후기 블로그 글)
-- 분량: 한국어 기준 약 1,200~1,800자
+- 분량: ${lengthInstruction(length)}
 - 구성 권장:
   1) # 제목 — 드라마 제목과 한 줄 인상을 살린 클릭하고 싶은 제목
   2) 짧은 도입(1~2문단): 어떤 계기로 보게 됐는지, 어떤 기대로 봤는지

@@ -16,6 +16,7 @@ import {
 
 import type { FormProps } from "./types";
 import { DRAMA_PLATFORM_OPTIONS } from "@/lib/prompts/dramaReview";
+import { LengthSelect } from "./_shared";
 
 interface DramaReviewValues {
   title: string;
@@ -26,6 +27,7 @@ interface DramaReviewValues {
   bads: string;
   rating: string;
   spoiler: boolean;
+  length: string;
 }
 
 const DEFAULT_VALUES: DramaReviewValues = {
@@ -37,6 +39,7 @@ const DEFAULT_VALUES: DramaReviewValues = {
   bads: "",
   rating: "4",
   spoiler: false,
+  length: "2000",
 };
 
 export function DramaReviewForm({ onChange }: FormProps) {
@@ -140,6 +143,11 @@ export function DramaReviewForm({ onChange }: FormProps) {
           </label>
         </Field>
       </div>
+
+      <LengthSelect
+        value={v.length}
+        onChange={(next) => update("length", next)}
+      />
     </div>
   );
 }
@@ -181,5 +189,6 @@ function serialize(v: DramaReviewValues): Record<string, unknown> {
     bads: v.bads,
     rating: Number(v.rating),
     spoiler: v.spoiler,
+    length: Number(v.length),
   };
 }

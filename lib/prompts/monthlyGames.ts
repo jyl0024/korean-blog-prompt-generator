@@ -1,4 +1,10 @@
-import { COMMON_WRITING_RULES, orNone } from "./common";
+import {
+  COMMON_WRITING_RULES,
+  orNone,
+  lengthInstruction,
+  parseLength,
+  parseRecommendCount,
+} from "./common";
 import type { GenerateInputs } from "../types";
 
 /**
@@ -13,6 +19,8 @@ export interface MonthlyGamesInputs {
   platforms: string[];
   topics: string[];
   keywords?: string;
+  length?: number | string;
+  count?: number | string;
 }
 
 /** 플랫폼 코드 → 라벨 매핑 (UI/프롬프트 양쪽에서 사용) */
@@ -60,6 +68,8 @@ export function buildPrompt(rawInputs: GenerateInputs): {
   const inputs = rawInputs as unknown as MonthlyGamesInputs;
 
   const monthLabel = formatMonth(inputs.month);
+  const length = parseLength(inputs.length);
+  const count = parseRecommendCount(inputs.count);
   const platforms = (inputs.platforms ?? []).map(platformLabel);
   const topics = (inputs.topics ?? []).map(topicLabel);
 
@@ -72,7 +82,7 @@ export function buildPrompt(rawInputs: GenerateInputs): {
 
 [이번 글 유형]
 - 카테고리: ${monthLabel} 게임 큐레이션 (이달의 게임 정보 정리 블로그 글)
-- 분량: 한국어 기준 약 1,800~2,800자
+- 분량: ${lengthInstruction(length)}
 - 독자: 한국 게이머 (한국어 지원 여부, 한국 가격, 한국 시간대 출시일을 중요하게 봄)
 
 [웹 검색 활용 — 반드시 지키세요]
@@ -105,7 +115,7 @@ export function buildPrompt(rawInputs: GenerateInputs): {
 
 [금지]
 - 검색하지 않은 채로 "ABC 게임이 5월 15일에 출시됩니다" 같은 단정형 사실을 적지 마세요. 반드시 web_search 로 확인 후 인용.
-- 모든 플랫폼/모든 게임을 망라하려 하지 마세요. 사용자가 지정한 범위 안에서 큐레이션하세요.
+- 모든 플랫폼/모든 게임을 망라하려 하지 마세요. 사용자가 지정한 범위 안에서 정확히 ${count}개로 큐레이션하세요.
 `;
 
   const user = `다음 조건으로 ${monthLabel} 의 게임 큐레이션 블로그 글을 써주세요.
@@ -113,9 +123,11 @@ export function buildPrompt(rawInputs: GenerateInputs): {
 - 대상 월: ${monthLabel}
 - 관심 플랫폼: ${platformsLine}
 - 다룰 내용: ${topicsLine}
+- 추천 게임 수: ${count}개 (반드시 이 개수로 큐레이션)
 - 추가 키워드: ${orNone(inputs.keywords)}
 
 먼저 web_search 로 위 조건에 맞는 ${monthLabel} 게임 정보를 충분히 검색한 다음, 그 결과만 사용해 한국어 블로그 글로 정리해주세요.
+전체적으로 정확히 ${count}개의 게임을 다뤄주세요.
 바로 본문(# 제목)부터 시작하세요.`;
 
   return { system, user };

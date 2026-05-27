@@ -2,7 +2,9 @@ import {
   COMMON_WRITING_RULES,
   bulletize,
   formatStars,
+  lengthInstruction,
   orNone,
+  parseLength,
 } from "./common";
 import type { GenerateInputs } from "../types";
 
@@ -17,6 +19,8 @@ export interface GameReviewInputs {
   rating?: number | string;
   recommendFor?: string;
   valueForMoney?: string;
+  /** 글자수 옵션 */
+  length?: number | string;
 }
 
 /** 게임 플레이 플랫폼 옵션 */
@@ -55,12 +59,13 @@ export function buildPrompt(rawInputs: GenerateInputs): {
   user: string;
 } {
   const inputs = rawInputs as unknown as GameReviewInputs;
+  const length = parseLength(inputs.length);
 
   const system = `${COMMON_WRITING_RULES}
 
 [이번 글 유형]
 - 카테고리: 게임 리뷰 (직접 플레이한 후기 블로그 글)
-- 분량: 한국어 기준 약 1,500~2,200자
+- 분량: ${lengthInstruction(length)}
 - 구성 권장:
   1) # 제목 — 게임 제목 + 한 줄 인상
   2) 도입(1~2문단): 어떤 계기로 플레이했는지, 어떤 기대였는지 + 플레이 환경(플랫폼/플레이 시간) 간단히 언급

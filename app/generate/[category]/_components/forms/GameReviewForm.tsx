@@ -18,6 +18,7 @@ import {
   GAME_REVIEW_PLATFORM_OPTIONS,
   VALUE_FOR_MONEY_OPTIONS,
 } from "@/lib/prompts/gameReview";
+import { LengthSelect } from "./_shared";
 
 interface GameReviewValues {
   title: string;
@@ -30,6 +31,7 @@ interface GameReviewValues {
   rating: string;
   recommendFor: string;
   valueForMoney: string;
+  length: string;
 }
 
 const DEFAULT_VALUES: GameReviewValues = {
@@ -43,6 +45,7 @@ const DEFAULT_VALUES: GameReviewValues = {
   rating: "4",
   recommendFor: "",
   valueForMoney: "good",
+  length: "2000",
 };
 
 export function GameReviewForm({ onChange }: FormProps) {
@@ -166,6 +169,11 @@ export function GameReviewForm({ onChange }: FormProps) {
           placeholder="예: TRPG/CRPG 입문자, 스토리 중심 게임 좋아하는 분"
         />
       </Field>
+
+      <LengthSelect
+        value={v.length}
+        onChange={(next) => update("length", next)}
+      />
     </div>
   );
 }
@@ -209,5 +217,6 @@ function serialize(v: GameReviewValues): Record<string, unknown> {
     rating: Number(v.rating),
     recommendFor: v.recommendFor.trim(),
     valueForMoney: v.valueForMoney,
+    length: Number(v.length),
   };
 }

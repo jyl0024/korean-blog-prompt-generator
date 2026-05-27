@@ -1,4 +1,10 @@
-import { COMMON_WRITING_RULES, orNone } from "./common";
+import {
+  COMMON_WRITING_RULES,
+  orNone,
+  lengthInstruction,
+  parseLength,
+  parseRecommendCount,
+} from "./common";
 import type { GenerateInputs } from "../types";
 import { DRAMA_PLATFORM_OPTIONS } from "./dramaReview";
 
@@ -7,6 +13,8 @@ export interface MonthlyDramasInputs {
   platforms: string[];
   keywords?: string;
   focus?: string;
+  length?: number | string;
+  count?: number | string;
 }
 
 /** monthly-dramas 폼이 쓰는 플랫폼 옵션 — dramaReview 의 것을 재사용 (단일 소스) */
@@ -33,6 +41,8 @@ export function buildPrompt(rawInputs: GenerateInputs): {
 } {
   const inputs = rawInputs as unknown as MonthlyDramasInputs;
   const monthLabel = formatMonth(inputs.month);
+  const length = parseLength(inputs.length);
+  const count = parseRecommendCount(inputs.count);
   const platforms = (inputs.platforms ?? []).map(platformLabel);
   const platformsLine =
     platforms.length > 0 ? platforms.join(", ") : "전체 OTT/방송 플랫폼";
@@ -41,7 +51,7 @@ export function buildPrompt(rawInputs: GenerateInputs): {
 
 [이번 글 유형]
 - 카테고리: ${monthLabel} 드라마 큐레이션 (이달의 드라마 정보 정리 블로그 글)
-- 분량: 한국어 기준 약 1,800~2,800자
+- 분량: ${lengthInstruction(length)}
 - 독자: 한국 시청자 (OTT 가입 여부, 한국 공개일을 중요하게 봄)
 
 [웹 검색 활용 — 반드시 지키세요]
@@ -65,13 +75,13 @@ export function buildPrompt(rawInputs: GenerateInputs): {
 1) # 제목 — "${monthLabel} 챙겨볼 드라마 라인업" 같은 한 줄
 2) 짧은 도입(1~2문단): 이번 달 드라마씬 분위기, 주목할 흐름
 3) ## 플랫폼별 주목작 — 사용자가 지정한 플랫폼 단위로 섹션 나누기
-   - 각 플랫폼 내 2~3편씩, 핵심 정보 + 짧은 코멘트
+   - 전체 합산 ${count}편을 플랫폼별로 적절히 배분, 핵심 정보 + 짧은 코멘트
 4) (선택) ## 이번 달 가장 기대되는 드라마 — 한 작품 골라 코멘트
 5) 마무리 한 단락
 
 [금지]
 - 검색하지 않은 채로 "5월 10일 공개" 같은 단정형 사실을 적지 마세요. 반드시 web_search 로 확인 후 인용.
-- 모든 드라마를 망라하지 마세요. 사용자가 지정한 플랫폼 범위 안에서 큐레이션하세요.
+- 모든 드라마를 망라하지 마세요. 사용자가 지정한 플랫폼 범위 안에서 정확히 ${count}편으로 큐레이션하세요.
 `;
 
   const focusLine = inputs.focus?.trim()
@@ -82,10 +92,12 @@ export function buildPrompt(rawInputs: GenerateInputs): {
 
 - 대상 월: ${monthLabel}
 - 관심 플랫폼: ${platformsLine}
+- 추천 작품 수: ${count}편 (반드시 이 개수로 큐레이션)
 - 추가 키워드: ${orNone(inputs.keywords)}
 ${focusLine}
 
 먼저 web_search 로 위 조건에 맞는 ${monthLabel} 드라마 정보를 충분히 검색한 다음, 그 결과만 사용해 한국어 블로그 글로 정리해주세요.
+전체적으로 정확히 ${count}편을 다뤄주세요.
 바로 본문(# 제목)부터 시작하세요.`;
 
   return { system, user };

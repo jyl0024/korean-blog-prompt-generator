@@ -68,3 +68,75 @@ export function orNone(v: unknown): string {
   const s = String(v).trim();
   return s.length === 0 ? "(입력 없음)" : s;
 }
+
+/* -------------------------------------------------------------------------- */
+/* 글자수 옵션 — 모든 카테고리 공통                                              */
+/* -------------------------------------------------------------------------- */
+
+export type LengthOption = 1000 | 2000 | 3000 | 4000 | 5000;
+
+export const LENGTH_OPTIONS: { value: LengthOption; label: string }[] = [
+  { value: 1000, label: "짧게 (약 1,000자)" },
+  { value: 2000, label: "보통 (약 2,000자)" },
+  { value: 3000, label: "길게 (약 3,000자)" },
+  { value: 4000, label: "매우 길게 (약 4,000자)" },
+  { value: 5000, label: "최대 (약 5,000자)" },
+];
+
+export const DEFAULT_LENGTH: LengthOption = 2000;
+
+/**
+ * 폼 값(string|number|undefined) → 유효한 LengthOption 으로 정규화.
+ * 잘못된 값이면 DEFAULT_LENGTH 를 돌려준다.
+ */
+export function parseLength(v: unknown): LengthOption {
+  const n = typeof v === "string" ? Number(v) : (v as number);
+  if (n === 1000 || n === 2000 || n === 3000 || n === 4000 || n === 5000) {
+    return n;
+  }
+  return DEFAULT_LENGTH;
+}
+
+/**
+ * 시스템 프롬프트에 들어갈 분량 지시문.
+ * 기존 프롬프트 빌더의 "분량: ..." 줄을 이 함수로 대체.
+ *
+ * 글자수에는 약간의 허용 범위를 둬서 AI 가 너무 깐깐하게 자르지 않도록 한다.
+ */
+export function lengthInstruction(target: LengthOption): string {
+  // 목표 글자수 ±15% 정도의 자연스러운 폭
+  const min = Math.round(target * 0.85);
+  const max = Math.round(target * 1.15);
+  return `한국어 기준 약 ${target.toLocaleString()}자 분량 (최소 ${min.toLocaleString()}자, 최대 ${max.toLocaleString()}자). 이 범위를 지키되 자연스러운 흐름을 우선하세요.`;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 추천 개수 옵션 — 이달의 * 카테고리 공통                                       */
+/* -------------------------------------------------------------------------- */
+
+export const RECOMMEND_COUNT_OPTIONS: { value: number; label: string }[] = [
+  { value: 1, label: "1개" },
+  { value: 2, label: "2개" },
+  { value: 3, label: "3개" },
+  { value: 4, label: "4개" },
+  { value: 5, label: "5개" },
+  { value: 6, label: "6개" },
+  { value: 7, label: "7개" },
+  { value: 8, label: "8개" },
+  { value: 9, label: "9개" },
+  { value: 10, label: "10개" },
+];
+
+export const DEFAULT_RECOMMEND_COUNT = 5;
+
+/**
+ * 폼 값 → 1~10 범위의 정수로 정규화.
+ */
+export function parseRecommendCount(v: unknown): number {
+  const n = typeof v === "string" ? Number(v) : (v as number);
+  if (!Number.isFinite(n)) return DEFAULT_RECOMMEND_COUNT;
+  const intN = Math.round(n);
+  if (intN < 1) return 1;
+  if (intN > 10) return 10;
+  return intN;
+}
