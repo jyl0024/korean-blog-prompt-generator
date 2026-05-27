@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CATEGORIES } from "@/lib/categories";
+import { copyToClipboard } from "@/lib/clipboard";
 import {
   updateHistoryResult,
   updateHistoryTitle,
@@ -62,12 +63,14 @@ export function HistoryDetailDialog({ entry, onClose, onChanged }: Props) {
   const fullPrompt = `${entry.prompt.system.trim()}\n\n---\n\n${entry.prompt.user.trim()}`;
 
   const doCopy = async (key: string, text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
+    const ok = await copyToClipboard(text);
+    if (ok) {
       setCopied(key);
       setTimeout(() => setCopied((c) => (c === key ? null : c)), 1500);
-    } catch {
-      alert("복사에 실패했습니다.");
+    } else {
+      alert(
+        "자동 복사가 차단된 환경입니다.\n해당 탭에서 텍스트를 직접 드래그한 뒤 Ctrl+C 로 복사해주세요."
+      );
     }
   };
 

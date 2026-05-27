@@ -7,6 +7,7 @@ import { Check, ClipboardCopy, Eye, Pencil, Save } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { copyToClipboard } from "@/lib/clipboard";
 import { markdownToPlainText } from "@/lib/markdown";
 
 type Mode = "edit" | "preview";
@@ -36,13 +37,14 @@ export function ResultPastePanel({
   const copy = async (kind: "md" | "txt") => {
     if (!value) return;
     const payload = kind === "md" ? value : markdownToPlainText(value);
-    try {
-      await navigator.clipboard.writeText(payload);
+    const ok = await copyToClipboard(payload);
+    if (ok) {
       setCopied(kind);
       setTimeout(() => setCopied((c) => (c === kind ? null : c)), 1500);
-    } catch (e) {
-      console.error("복사 실패", e);
-      alert("복사에 실패했습니다.");
+    } else {
+      alert(
+        "자동 복사가 차단된 환경입니다.\n편집 모드에서 텍스트를 드래그한 뒤 Ctrl+C 로 복사해주세요."
+      );
     }
   };
 
